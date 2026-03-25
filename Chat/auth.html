@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ChatRoom — Sign In</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:      #0b0c10;
+      --panel:   #111318;
+      --surface: #181c25;
+      --border:  #232836;
+      --accent:  #7c6aff;
+      --accent2: #ff6a9e;
+      --accent3: #6affda;
+      --text:    #e8eaf0;
+      --muted:   #6b7080;
+      --online:  #3dffa0;
+      --glow:    rgba(124,106,255,.25);
+      --danger:  #ff5757;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+
+    body::before {
+      content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+      background:
+        radial-gradient(ellipse 60% 55% at 15% 10%, rgba(124,106,255,.2) 0%, transparent 65%),
+        radial-gradient(ellipse 50% 50% at 85% 90%, rgba(255,106,158,.14) 0%, transparent 65%),
+        radial-gradient(ellipse 40% 40% at 70% 20%, rgba(106,255,218,.09) 0%, transparent 60%);
+    }
+
+    /* Animated floating orbs */
+    .orb { position:fixed; border-radius:50%; filter:blur(80px); opacity:.18; pointer-events:none; z-index:0; animation: float 8s ease-in-out infinite; }
+    .orb1 { width:340px; height:340px; background:var(--accent);  top:-80px;  left:-80px;  animation-delay:0s; }
+    .orb2 { width:260px; height:260px; background:var(--accent2); bottom:-60px; right:-60px; animation-delay:-3s; }
+    .orb3 { width:200px; height:200px; background:var(--accent3); top:40%; right:10%; animation-delay:-5s; }
+    @keyframes float { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-30px) scale(1.05)} }
+
+    /* Layout */
+    .page { position:relative; z-index:1; display:grid; grid-template-columns:1fr 1fr; height:100vh; }
+
+    /* Left panel — branding */
+    .brand-panel {
+      background: linear-gradient(160deg, rgba(124,106,255,.12) 0%, rgba(255,106,158,.08) 100%);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 60px; position: relative; overflow: hidden;
+    }
+    .brand-panel::after {
+      content:''; position:absolute; inset:0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%237c6aff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      pointer-events:none;
+    }
+    .brand-logo { display:flex; align-items:center; gap:14px; margin-bottom:48px; }
+    .brand-mark { width:50px; height:50px; border-radius:16px; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:grid; place-items:center; font-size:24px; box-shadow:0 8px 28px var(--glow); }
+    .brand-name { font-family:'DM Serif Display',serif; font-size:28px; background:linear-gradient(90deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .brand-headline { font-family:'DM Serif Display',serif; font-size:42px; line-height:1.2; margin-bottom:20px; }
+    .brand-headline span { background:linear-gradient(120deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .brand-sub { font-size:16px; color:var(--muted); line-height:1.7; max-width:380px; margin-bottom:48px; }
+    .features { display:flex; flex-direction:column; gap:16px; }
+    .feature { display:flex; align-items:center; gap:14px; }
+    .feature-icon { width:38px; height:38px; border-radius:11px; background:rgba(124,106,255,.12); border:1px solid rgba(124,106,255,.2); display:grid; place-items:center; font-size:16px; flex-shrink:0; }
+    .feature-text { font-size:14px; color:var(--muted); }
+    .feature-text strong { color:var(--text); }
+
+    /* Right panel — auth form */
+    .auth-panel { display:flex; align-items:center; justify-content:center; padding:40px; overflow-y:auto; }
+    .auth-card {
+      background:var(--panel); border:1px solid var(--border); border-radius:28px;
+      padding:44px 40px; width:100%; max-width:440px;
+      box-shadow:0 24px 80px rgba(0,0,0,.5), 0 0 0 1px rgba(124,106,255,.06);
+      animation: cardIn .5s cubic-bezier(.34,1.4,.64,1) both;
+    }
+    @keyframes cardIn { from{opacity:0;transform:scale(.9) translateY(20px)} to{opacity:1;transform:none} }
+
+    .tabs { display:flex; gap:4px; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:4px; margin-bottom:32px; }
+    .tab { flex:1; padding:10px; border:none; border-radius:11px; background:none; color:var(--muted); font-size:14px; font-weight:500; font-family:inherit; cursor:pointer; transition:all .18s; }
+    .tab.active { background:var(--panel); color:var(--text); box-shadow:0 2px 8px rgba(0,0,0,.3); }
+
+    .form-title { font-family:'DM Serif Display',serif; font-size:26px; margin-bottom:6px; }
+    .form-sub { font-size:13.5px; color:var(--muted); margin-bottom:28px; line-height:1.5; }
+
+    .field { margin-bottom:16px; }
+    .field label { display:block; font-size:11.5px; font-weight:600; letter-spacing:.7px; text-transform:uppercase; color:var(--muted); margin-bottom:7px; }
+    .field input {
+      width:100%; padding:13px 16px; background:var(--surface); border:1.5px solid var(--border);
+      border-radius:13px; color:var(--text); font-size:14.5px; font-family:inherit;
+      outline:none; transition:border-color .2s, box-shadow .2s;
+    }
+    .field input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(124,106,255,.12); }
+    .field input::placeholder { color:var(--muted); }
+    .field input.error { border-color:var(--danger); }
+
+    /* Avatar picker */
+    .avatar-section { margin-bottom:20px; }
+    .avatar-section label { display:block; font-size:11.5px; font-weight:600; letter-spacing:.7px; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+    .avatar-grid { display:flex; flex-wrap:wrap; gap:8px; }
+    .av-pick { width:42px; height:42px; border-radius:12px; font-size:20px; display:grid; place-items:center; cursor:pointer; border:2px solid transparent; transition:all .15s; }
+    .av-pick:hover { transform:scale(1.1); }
+    .av-pick.selected { border-color:var(--accent); box-shadow:0 0 0 3px rgba(124,106,255,.25); }
+
+    .submit-btn {
+      width:100%; padding:15px; border-radius:14px;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      border:none; color:#fff; font-size:15px; font-weight:600; font-family:inherit;
+      cursor:pointer; box-shadow:0 6px 22px rgba(124,106,255,.4);
+      transition:transform .12s, box-shadow .12s, opacity .15s;
+      margin-top:8px;
+    }
+    .submit-btn:hover { transform:translateY(-2px); box-shadow:0 10px 30px rgba(124,106,255,.5); }
+    .submit-btn:active { transform:translateY(0) scale(.98); opacity:.85; }
+    .submit-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+
+    .divider { display:flex; align-items:center; gap:12px; margin:20px 0; color:var(--muted); font-size:12px; }
+    .divider::before, .divider::after { content:''; flex:1; height:1px; background:var(--border); }
+
+    .error-box {
+      background:rgba(255,87,87,.1); border:1px solid rgba(255,87,87,.3);
+      border-radius:10px; padding:10px 14px; font-size:13px; color:#ff7878;
+      margin-bottom:16px; display:none;
+    }
+    .error-box.visible { display:block; }
+
+    .success-box {
+      background:rgba(61,255,160,.1); border:1px solid rgba(61,255,160,.3);
+      border-radius:10px; padding:10px 14px; font-size:13px; color:var(--online);
+      margin-bottom:16px; display:none;
+    }
+    .success-box.visible { display:block; }
+
+    .hint { font-size:12px; color:var(--muted); margin-top:18px; text-align:center; }
+    .hint a { color:var(--accent); cursor:pointer; text-decoration:none; }
+    .hint a:hover { text-decoration:underline; }
+
+    /* Loading spinner on button */
+    .spinner { display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:spin .6s linear infinite; vertical-align:middle; margin-right:8px; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+
+    /* Password strength */
+    .pw-strength { margin-top:6px; height:3px; border-radius:99px; background:var(--border); overflow:hidden; }
+    .pw-bar { height:100%; width:0; border-radius:99px; transition:width .3s, background .3s; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .page { grid-template-columns:1fr; }
+      .brand-panel { display:none; }
+      .auth-panel { padding:20px; align-items:flex-start; padding-top:40px; }
+    }
+  </style>
+</head>
+<body>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<div class="page">
+  <!-- Left — branding -->
+  <div class="brand-panel">
+    <div class="brand-logo">
+      <div class="brand-mark">✦</div>
+      <span class="brand-name">ChatRoom</span>
+    </div>
+    <h1 class="brand-headline">Where great<br><span>conversations</span><br>happen.</h1>
+    <p class="brand-sub">Join a community of real-time chat with rich features — replies, reactions, DMs, images, and more. Beautiful by design.</p>
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">💬</div>
+        <div class="feature-text"><strong>Multi-channel rooms</strong> — General, Design, Tech, Music & Random</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">💌</div>
+        <div class="feature-text"><strong>Private DMs</strong> — Send direct messages to anyone online</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🖼️</div>
+        <div class="feature-text"><strong>Rich messages</strong> — Images, replies, reactions & @mentions</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">💾</div>
+        <div class="feature-text"><strong>Persistent history</strong> — Your messages saved across sessions</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right — auth -->
+  <div class="auth-panel">
+    <div class="auth-card">
+      <div class="tabs">
+        <button class="tab active" id="tabLogin" onclick="switchTab('login')">Sign In</button>
+        <button class="tab" id="tabRegister" onclick="switchTab('register')">Create Account</button>
+      </div>
+
+      <!-- Error / Success -->
+      <div class="error-box" id="errorBox"></div>
+      <div class="success-box" id="successBox"></div>
+
+      <!-- LOGIN FORM -->
+      <div id="loginForm">
+        <div class="form-title">Welcome back 👋</div>
+        <p class="form-sub">Sign in with your username or email</p>
+
+        <div class="field">
+          <label>Username or Email</label>
+          <input type="text" id="loginUsername" placeholder="yourname or you@email.com" autocomplete="username"/>
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="loginPassword" placeholder="Your password" autocomplete="current-password"/>
+        </div>
+
+        <button class="submit-btn" id="loginBtn" onclick="doLogin()">Sign In →</button>
+        <p class="hint">Don't have an account? <a onclick="switchTab('register')">Create one free</a></p>
+      </div>
+
+      <!-- REGISTER FORM -->
+      <div id="registerForm" style="display:none">
+        <div class="form-title">Join ChatRoom ✦</div>
+        <p class="form-sub">Create your free account — takes 30 seconds</p>
+
+        <div class="field">
+          <label>Username</label>
+          <input type="text" id="regUsername" placeholder="e.g. alex_rivers" maxlength="24" autocomplete="username" oninput="checkUsername()"/>
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="regEmail" placeholder="you@example.com" autocomplete="email"/>
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="regPassword" placeholder="Min. 6 characters" autocomplete="new-password" oninput="updateStrength()"/>
+          <div class="pw-strength"><div class="pw-bar" id="pwBar"></div></div>
+        </div>
+
+        <div class="avatar-section">
+          <label>Pick your avatar</label>
+          <div class="avatar-grid" id="avatarGrid"></div>
+        </div>
+
+        <button class="submit-btn" id="registerBtn" onclick="doRegister()">Create Account →</button>
+        <p class="hint">Already have an account? <a onclick="switchTab('login')">Sign in</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const AVATARS    = ['🐙','🦊','🐬','🦋','🐉','🦁','🐧','🦅','🦄','🐺','🦚','🐳'];
+const AVATAR_BGS = ['#1e1a3a','#2a1a1e','#1a2a1e','#1a1e2a','#2a2a1a','#1e2a2a','#1a1a2a','#2a1a2a','#1e2a1e','#1e1e1e','#2a1e1a','#1a2a2a'];
+let selectedAv = 0;
+
+// Build avatar grid
+(function() {
+  const grid = document.getElementById('avatarGrid');
+  AVATARS.forEach((em, i) => {
+    const d = document.createElement('div');
+    d.className = 'av-pick' + (i === 0 ? ' selected' : '');
+    d.textContent = em;
+    d.style.background = AVATAR_BGS[i];
+    d.title = em;
+    d.onclick = () => {
+      document.querySelectorAll('.av-pick').forEach(x => x.classList.remove('selected'));
+      d.classList.add('selected');
+      selectedAv = i;
+    };
+    grid.appendChild(d);
+  });
+})();
+
+// Check if already logged in
+(async function() {
+  try {
+    const r = await fetch('/api/auth/me');
+    if (r.ok) { const d = await r.json(); if (d.ok) window.location.href = '/'; }
+  } catch(e) {}
+})();
+
+function switchTab(tab) {
+  document.getElementById('loginForm').style.display    = tab === 'login'    ? '' : 'none';
+  document.getElementById('registerForm').style.display = tab === 'register' ? '' : 'none';
+  document.getElementById('tabLogin').classList.toggle('active',    tab === 'login');
+  document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
+  clearMessages();
+}
+
+function showError(msg) {
+  const b = document.getElementById('errorBox');
+  b.textContent = msg; b.classList.add('visible');
+  document.getElementById('successBox').classList.remove('visible');
+}
+function showSuccess(msg) {
+  const b = document.getElementById('successBox');
+  b.textContent = msg; b.classList.add('visible');
+  document.getElementById('errorBox').classList.remove('visible');
+}
+function clearMessages() {
+  document.getElementById('errorBox').classList.remove('visible');
+  document.getElementById('successBox').classList.remove('visible');
+}
+
+function setLoading(btnId, loading, defaultText) {
+  const btn = document.getElementById(btnId);
+  btn.disabled = loading;
+  btn.innerHTML = loading ? `<span class="spinner"></span> Please wait…` : defaultText;
+}
+
+function updateStrength() {
+  const pw   = document.getElementById('regPassword').value;
+  const bar  = document.getElementById('pwBar');
+  let score  = 0;
+  if (pw.length >= 6) score++;
+  if (pw.length >= 10) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^a-zA-Z0-9]/.test(pw)) score++;
+  const pct   = (score / 5) * 100;
+  const color = score <= 1 ? '#ff5757' : score <= 3 ? '#ffb84d' : '#3dffa0';
+  bar.style.width = pct + '%';
+  bar.style.background = color;
+}
+
+function checkUsername() {
+  const inp = document.getElementById('regUsername');
+  const val = inp.value;
+  const ok  = /^[a-zA-Z0-9_\-\.]*$/.test(val);
+  inp.classList.toggle('error', !ok && val.length > 0);
+}
+
+async function doLogin() {
+  clearMessages();
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  if (!username || !password) { showError('Please fill in all fields'); return; }
+
+  setLoading('loginBtn', true, 'Sign In →');
+  try {
+    const r = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const d = await r.json();
+    if (d.ok) {
+      showSuccess(`Welcome back, ${d.user.username}! Redirecting…`);
+      setTimeout(() => window.location.href = '/', 800);
+    } else {
+      showError(d.error || 'Login failed');
+    }
+  } catch(e) {
+    showError('Network error — is the server running?');
+  } finally {
+    setLoading('loginBtn', false, 'Sign In →');
+  }
+}
+
+async function doRegister() {
+  clearMessages();
+  const username  = document.getElementById('regUsername').value.trim();
+  const email     = document.getElementById('regEmail').value.trim();
+  const password  = document.getElementById('regPassword').value;
+  const avatar    = AVATARS[selectedAv];
+  const avatarBg  = AVATAR_BGS[selectedAv];
+
+  if (!username || !email || !password) { showError('Please fill in all fields'); return; }
+  if (!/^[a-zA-Z0-9_\-\.]+$/.test(username)) { showError('Username can only contain letters, numbers, _ - .'); return; }
+  if (password.length < 6) { showError('Password must be at least 6 characters'); return; }
+
+  setLoading('registerBtn', true, 'Create Account →');
+  try {
+    const r = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, email, password, avatar, avatarBg })
+    });
+    const d = await r.json();
+    if (d.ok) {
+      showSuccess(`Account created! Welcome, ${d.user.username}! Redirecting…`);
+      setTimeout(() => window.location.href = '/', 900);
+    } else {
+      showError(d.error || 'Registration failed');
+    }
+  } catch(e) {
+    showError('Network error — is the server running?');
+  } finally {
+    setLoading('registerBtn', false, 'Create Account →');
+  }
+}
+
+// Enter key support
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const isLogin = document.getElementById('loginForm').style.display !== 'none';
+  if (isLogin) doLogin(); else doRegister();
+});
+</script>
+</body>
+</html>
